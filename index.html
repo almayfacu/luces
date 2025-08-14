@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Memoralma de colores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Poppins', sans-serif;
       background: #fdf6f0;
       height: 100%;
       display: flex;
@@ -21,14 +22,13 @@
       color: #e94e77;
       font-size: clamp(1.5rem, 4vw, 2.5rem);
       text-align: center;
-      font-family: 'comic sans ms';
+      font-weight: 600;
     }
 
     #level-indicator {
       font-size: clamp(1rem, 2vw, 1.5rem);
       margin: 10px;
       color: #555;
-      font-family: 'Comic Sans MS';
     }
 
     #game-container {
@@ -71,8 +71,8 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-family: 'Comic Sans MS';
       color: white;
+      font-weight: 600;
     }
 
     #win-overlay, #lose-overlay, #start-overlay {
@@ -135,7 +135,6 @@
   <canvas id="confetti"></canvas>
 
   <script>
-    // Mapa de archivos de audio
     const audioFiles = {
       red: new Audio('red.mp3'),
       green: new Audio('green.mp3'),
@@ -145,7 +144,6 @@
       lose: new Audio('lose.mp3')
     };
 
-    // Función de fundido (fade out) antes de pausar
     function fadeOut(audio, duration = 400) {
       const steps = 20;
       const stepTime = duration / steps;
@@ -157,26 +155,26 @@
         if (count >= steps) {
           clearInterval(fading);
           audio.pause();
-          audio.volume = 1; // restaurar volumen
+          audio.volume = 1;
         }
       }, stepTime);
     }
 
-    // Función para reproducir sonido con clonación y fade out
-    function playSound(color) {
+    async function playSound(color) {
       const original = audioFiles[color];
       if (!original) return;
       const clone = original.cloneNode();
-      clone.currentTime = 0;
       clone.volume = 1;
-      clone.play().then(() => {
-        // Si ya cargó la duración, programamos el fade out
+      try {
+        await clone.play();
         const total = clone.duration * 1000;
-        const fadeTime = 400; // ms
+        const fadeTime = 400;
         if (!isNaN(total) && total > fadeTime) {
           setTimeout(() => fadeOut(clone, fadeTime), total - fadeTime);
         }
-      }).catch(e => console.warn('Error reproduciendo sonido:', e));
+      } catch (e) {
+        console.warn('Error reproduciendo sonido:', e);
+      }
     }
 
     const colorButtons = {
@@ -207,7 +205,7 @@
       acceptingInput = false;
       playerSequence = [];
       await new Promise(res => setTimeout(res, 1000));
-      const delay = Math.max(350, 1000 - level * 150);
+      const delay = Math.max(600, 1200 - level * 150);
       for (let color of sequence) {
         flash(color);
         await new Promise(res => setTimeout(res, delay));
@@ -218,8 +216,8 @@
     function nextLevel() {
       level++;
       updateLevelIndicator();
-      const lengths = [3,4,5];
-      sequence = Array.from({length: lengths[level-1]}, () => colorList[Math.floor(Math.random()*4)]);
+      const lengths = [3, 4, 5];
+      sequence = Array.from({ length: lengths[level - 1] }, () => colorList[Math.floor(Math.random() * 4)]);
       showSequence();
     }
 
@@ -242,7 +240,7 @@
       const idx = playerSequence.length - 1;
       if (playerSequence[idx] !== sequence[idx]) return loseGame();
       if (playerSequence.length === sequence.length) {
-        level === 3 ? winGame() : setTimeout(nextLevel,1000);
+        level === 3 ? winGame() : setTimeout(nextLevel, 1000);
       }
     }
 
@@ -266,33 +264,41 @@
     const confettiCanvas = document.getElementById('confetti');
     const ctx = confettiCanvas.getContext('2d');
     let particles = [];
-    function resizeCanvas(){confettiCanvas.width=innerWidth;confettiCanvas.height=innerHeight;}
-    window.addEventListener('resize',resizeCanvas); resizeCanvas();
-    function launchConfetti(){
+
+    function resizeCanvas() {
+      confettiCanvas.width = innerWidth;
+      confettiCanvas.height = innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function launchConfetti() {
       particles = [];
-      for(let i=0;i<150;i++){
+      for (let i = 0; i < 150; i++) {
         particles.push({
-          x: Math.random()*innerWidth,
-          y: Math.random()*innerHeight-innerHeight,
-          r: Math.random()*6+2,
-          d: Math.random()*10+5,
-          color: `hsl(${Math.random()*360},100%,70%)`,
-          tilt: Math.random()*10-10
+          x: Math.random() * innerWidth,
+          y: Math.random() * innerHeight - innerHeight,
+          r: Math.random() * 6 + 2,
+          d: Math.random() * 10 + 5,
+          color: `hsl(${Math.random() * 360},100%,70%)`,
+          tilt: Math.random() * 10 - 10
         });
       }
       animateConfetti();
     }
-    function animateConfetti(){
-      ctx.clearRect(0,0,innerWidth,innerHeight);
-      particles.forEach(p=>{
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      particles.forEach(p => {
         ctx.beginPath();
         ctx.fillStyle = p.color;
-        ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+        ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
         ctx.fill();
         p.y += p.d;
         p.x += Math.sin(p.tilt);
       });
-      if(particles.some(p=>p.y<innerHeight)) requestAnimationFrame(animateConfetti);
+      if (particles.some(p => p.y < innerHeight)) requestAnimationFrame(animateConfetti);
     }
   </script>
 </body>
